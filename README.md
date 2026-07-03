@@ -325,12 +325,12 @@ Bu yazılım yalnızca eğitim ve araştırma amaçlıdır. Kullanıcılar yerel
 
 ## 📞 İletişim
 
-- **Issues**: [GitHub Issues](https://github.com/username/xray-panel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/username/xray-panel/discussions)
+- **Issues**: [GitHub Issues](https://github.com/memobeys3/pho3nix-panel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/memobeys3/pho3nix-panel/discussions)
 
 ## 🌟 Yıldız Geçmişi
 
-[![Star History Chart](https://api.star-history.com/svg?repos=username/xray-panel&type=Date)](https://star-history.com/#username/xray-panel&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=memobeys3/pho3nix-panel&type=Date)](https://star-history.com/#memobeys3/pho3nix-panel&Date)
 
 ---
 
