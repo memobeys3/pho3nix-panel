@@ -1,4 +1,4 @@
-# ⚡ Xray VPN Management Panel
+# 🦊 Pho3nix Panel
 
 Modern, web tabanlı Xray-Core yönetim paneli. VLESS + Reality ve VMess protokollerini destekler, kullanıcı ve kota yönetimi sağlar.
 
@@ -36,8 +36,8 @@ Modern, web tabanlı Xray-Core yönetim paneli. VLESS + Reality ve VMess protoko
 
 ```bash
 # Projeyi klonlayın
-git clone https://github.com/username/xray-panel.git
-cd xray-panel
+git clone https://github.com/memobeys3/pho3nix-panel.git
+cd pho3nix-panel
 
 # Kurulum betiğini çalıştırın
 chmod +x install.sh
@@ -62,12 +62,12 @@ sudo apt-get install -y python3 python3-pip python3-venv curl jq git
 bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
 
 # 4. Proje dizini oluştur
-sudo mkdir -p /opt/xray-panel
-cd /opt/xray-panel
+sudo mkdir -p /opt/pho3nix-panel
+cd /opt/pho3nix-panel
 
 # 5. Dosyaları kopyala (proje dizininden)
-sudo cp /path/to/xray-panel/* .
-sudo cp -r /path/to/xray-panel/templates .
+sudo cp /path/to/pho3nix-panel/* .
+sudo cp -r /path/to/pho3nix-panel/templates .
 
 # 6. Python sanal ortam
 sudo python3 -m venv venv
@@ -83,17 +83,17 @@ echo "REALITY_PRIVATE=$PRIVATE_KEY" | sudo tee .env
 echo "REALITY_PUBLIC=$PUBLIC_KEY" | sudo tee -a .env
 
 # 8. Systemd servisi oluştur
-sudo cat <<EOF > /etc/systemd/system/xray-panel.service
+sudo cat <<EOF > /etc/systemd/system/pho3nix-panel.service
 [Unit]
-Description=Xray VPN Management Panel
+Description=Pho3nix VPN Management Panel
 After=network.target
 
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/xray-panel
-Environment="PATH=/opt/xray-panel/venv/bin"
-ExecStart=/opt/xray-panel/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+WorkingDirectory=/opt/pho3nix-panel
+Environment="PATH=/opt/pho3nix-panel/venv/bin"
+ExecStart=/opt/pho3nix-panel/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
 
 [Install]
@@ -104,8 +104,8 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable xray
 sudo systemctl start xray
-sudo systemctl enable xray-panel
-sudo systemctl start xray-panel
+sudo systemctl enable pho3nix-panel
+sudo systemctl start pho3nix-panel
 ```
 
 ## 📖 Kullanım
@@ -166,7 +166,7 @@ sudo ufw enable
 - ✅ Nginx reverse proxy kullanın (HTTPS ile)
 - ✅ Temel kimlik doğrulama ekleyin (HTTP Basic Auth)
 - ✅ Fail2ban kurun
-- ✅ Düzenli yedekleme alın (`/opt/xray-panel/xray_panel.db`)
+- ✅ Düzenli yedekleme alın (`/opt/pho3nix-panel/pho3nix_panel.db`)
 
 ### Nginx Reverse Proxy Örneği
 
@@ -213,13 +213,13 @@ curl http://localhost:8000/api/config
 ## 🔧 Dosya Yapısı
 
 ```
-/opt/xray-panel/
+/opt/pho3nix-panel/
 ├── requirements.txt      # Python bağımlılıkları
 ├── install.sh            # Otomatik kurulum betiği
 ├── database.py           # SQLAlchemy ORM
 ├── xray_manager.py       # Xray config yönetimi
 ├── main.py               # FastAPI uygulaması
-├── xray_panel.db         # SQLite veritabanı
+├── pho3nix_panel.db      # SQLite veritabanı
 ├── .env                  # Reality anahtarları (GİZLİ)
 ├── venv/                 # Python sanal ortamı
 └── templates/
@@ -235,10 +235,10 @@ curl http://localhost:8000/api/config
 
 ```bash
 # Servis durumunu kontrol edin
-sudo systemctl status xray-panel
+sudo systemctl status pho3nix-panel
 
 # Logları inceleyin
-sudo journalctl -u xray-panel -f
+sudo journalctl -u pho3nix-panel -f
 ```
 
 ### Xray servisi başlamıyor
@@ -265,7 +265,7 @@ sudo journalctl -u xray -f
 
 ```bash
 # Manuel olarak config'i yenileyin
-cd /opt/xray-panel
+cd /opt/pho3nix-panel
 sudo source venv/bin/activate
 python -c "import database, xray_manager; db = next(database.get_db()); xray_manager.apply_config(db)"
 ```
@@ -274,12 +274,12 @@ python -c "import database, xray_manager; db = next(database.get_db()); xray_man
 
 ```bash
 # Manuel yedekleme
-cp /opt/xray-panel/xray_panel.db /opt/xray-panel/backups/backup-$(date +%Y%m%d).db
+cp /opt/pho3nix-panel/pho3nix_panel.db /opt/pho3nix-panel/backups/backup-$(date +%Y%m%d).db
 
 # Otomatik yedekleme (crontab)
 crontab -e
 # Her gün saat 03:00'te yedekle
-0 3 * * * cp /opt/xray-panel/xray_panel.db /opt/xray-panel/backups/backup-$(date +\%Y\%m\%d).db
+0 3 * * * cp /opt/pho3nix-panel/pho3nix_panel.db /opt/pho3nix-panel/backups/backup-$(date +\%Y\%m\%d).db
 ```
 
 ## 📝 Değişiklik Günlüğü
@@ -294,13 +294,13 @@ crontab -e
 
 ## 🤝 Katkıda Bulunma
 
-Katkılarınızı bekliyoruz! Lütfen [CONTRIBUTING.md](CONTRIBUTING.md) dosyasını okuyun.
+Katkılarınızı bekliyoruz! Pull request açabilirsiniz.
 
 ### Geliştirme Ortamı
 
 ```bash
-git clone https://github.com/username/xray-panel.git
-cd xray-panel
+git clone https://github.com/memobeys3/pho3nix-panel.git
+cd pho3nix-panel
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -309,7 +309,7 @@ uvicorn main:app --reload
 
 ## 📄 Lisans
 
-Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakın.
+Bu proje MIT lisansı altında lisanslanmıştır.
 
 ## ⚠️ Sorumluluk Reddi
 
@@ -326,6 +326,7 @@ Bu yazılım yalnızca eğitim ve araştırma amaçlıdır. Kullanıcılar yerel
 ## 📞 İletişim
 
 - **Issues**: [GitHub Issues](https://github.com/memobeys3/pho3nix-panel/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/memobeys3/pho3nix-panel/discussions)
 
 ## 🌟 Yıldız Geçmişi
 
@@ -334,8 +335,6 @@ Bu yazılım yalnızca eğitim ve araştırma amaçlıdır. Kullanıcılar yerel
 ---
 
 <p align="center">
-  <strong>Made with ❤️ by the community</strong><br>
+  <strong>Made with ❤️ by memobeys3</strong><br>
   <sub>Eğer bu proje işinize yaradıysa ⭐ vermeyi unutmayın!</sub>
 </p>
-
-
