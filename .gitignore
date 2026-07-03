@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Veritabanı
+*.db
+*.sqlite
+*.sqlite3
+xray_panel.db
+
+# Ortam değişkenleri (GİZLİ ANAHTARLAR)
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Log dosyaları
+*.log
+logs/
+
+# Test ve coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Geçici dosyalar
+*.tmp
+*.temp
+.cache/
+
+# Xray config (sistem dosyası, projede tutulmaz)
+/etc/xray/config.json
+
+# Backup dosyaları
+*.bak
+*.backup
