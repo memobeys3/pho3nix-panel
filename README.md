@@ -326,7 +326,6 @@ Bu yazılım yalnızca eğitim ve araştırma amaçlıdır. Kullanıcılar yerel
 ## 📞 İletişim
 
 - **Issues**: [GitHub Issues](https://github.com/memobeys3/pho3nix-panel/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/memobeys3/pho3nix-panel/discussions)
 
 ## 🌟 Yıldız Geçmişi
 
