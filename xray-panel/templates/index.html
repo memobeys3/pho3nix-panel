@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xray Panel | Dashboard</title>
+    <title>Pho3nix Panel | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
@@ -15,38 +15,55 @@
         .btn-danger:hover { background-color: #dc2626; }
         .btn-success { background-color: #10b981; transition: all 0.2s; }
         .btn-success:hover { background-color: #059669; }
+        .btn-purple { background-color: #8b5cf6; transition: all 0.2s; }
+        .btn-purple:hover { background-color: #7c3aed; }
         .table-row:hover { background-color: #273549; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 50; }
         .modal.active { display: flex; }
+        .live-dot { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
     <nav class="flex justify-between items-center mb-8">
-        <h1 class="text-2xl font-bold text-blue-400">⚡ Xray Management Panel</h1>
-        <div class="text-sm text-slate-400">System Status: <span id="system-status" class="text-green-400 font-semibold">Online</span></div>
+        <h1 class="text-2xl font-bold text-purple-400">🦊 Pho3nix Panel</h1>
+        <div class="flex items-center gap-4">
+            <div class="text-sm text-slate-400">
+                <span class="live-dot inline-block w-2 h-2 bg-green-400 rounded-full mr-2"></span>
+                Canlı İzleme
+            </div>
+            <div class="text-sm text-slate-400">Durum: <span id="system-status" class="text-green-400 font-semibold">Online</span></div>
+        </div>
     </nav>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div class="card p-6 flex flex-col">
-            <span class="text-slate-400 text-sm">Total Users</span>
+            <span class="text-slate-400 text-sm">Toplam Kullanıcı</span>
             <span id="stat-total" class="text-3xl font-bold mt-2">0</span>
         </div>
         <div class="card p-6 flex flex-col">
-            <span class="text-slate-400 text-sm">Active Connections</span>
+            <span class="text-slate-400 text-sm">Aktif Bağlantı</span>
             <span id="stat-active" class="text-3xl font-bold mt-2 text-green-400">0</span>
         </div>
         <div class="card p-6 flex flex-col">
-            <span class="text-slate-400 text-sm">Total Traffic Used</span>
+            <span class="text-slate-400 text-sm">Toplam Trafik</span>
             <span id="stat-traffic" class="text-3xl font-bold mt-2 text-blue-400">0 GB</span>
+        </div>
+        <div class="card p-6 flex flex-col">
+            <span class="text-slate-400 text-sm">Son Güncelleme</span>
+            <span id="stat-lastupdate" class="text-lg font-bold mt-2 text-purple-400">-</span>
         </div>
     </div>
 
     <div class="card p-6 mb-8">
-        <h2 class="text-lg font-semibold mb-4">Add New User</h2>
+        <h2 class="text-lg font-semibold mb-4">Yeni Kullanıcı Ekle</h2>
         <form id="add-user-form" class="flex flex-col md:flex-row gap-4">
-            <input type="text" id="username" placeholder="Username" required class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <input type="number" id="quota" placeholder="Quota (GB, 0 for unlimited)" value="0" class="w-full md:w-48 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button type="submit" class="btn-primary text-white font-semibold px-6 py-2 rounded-lg">Add User</button>
+            <input type="text" id="username" placeholder="Kullanıcı Adı" required class="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <input type="number" id="quota" placeholder="Kota (GB, 0 = sınırsız)" value="0" class="w-full md:w-48 bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            <button type="submit" class="btn-primary text-white font-semibold px-6 py-2 rounded-lg">Kullanıcı Ekle</button>
         </form>
     </div>
 
@@ -55,11 +72,11 @@
             <table class="w-full text-left">
                 <thead class="bg-slate-800 border-b border-slate-700">
                     <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Kullanıcı</th>
                         <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">UUID</th>
-                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Usage</th>
-                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider text-right">Actions</th>
+                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Kullanım</th>
+                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Durum</th>
+                        <th class="px-6 py-3 text-xs font-medium text-slate-400 uppercase tracking-wider text-right">İşlemler</th>
                     </tr>
                 </thead>
                 <tbody id="users-table-body" class="divide-y divide-slate-700">
@@ -73,11 +90,12 @@
     <div id="qr-modal" class="modal">
         <div class="card p-8 max-w-sm w-full mx-4 text-center relative">
             <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl">&times;</button>
-            <h3 id="modal-title" class="text-xl font-bold mb-6">Connection Details</h3>
+            <h3 id="modal-title" class="text-xl font-bold mb-6">Bağlantı Detayları</h3>
             <div id="qrcode" class="flex justify-center mb-6"></div>
             <div class="flex flex-col gap-2">
-                <button onclick="copyLink('vless')" class="btn-primary text-white py-2 rounded-lg">Copy VLESS Link</button>
-                <button onclick="copyLink('vmess')" class="btn-success text-white py-2 rounded-lg">Copy VMess Link</button>
+                <button onclick="copySubscriptionLink()" class="btn-purple text-white py-2 rounded-lg">📋 Abonelik Linkini Kopyala</button>
+                <button onclick="copyLink('vless')" class="btn-primary text-white py-2 rounded-lg">VLESS Link Kopyala</button>
+                <button onclick="copyLink('vmess')" class="btn-success text-white py-2 rounded-lg">VMess Link Kopyala</button>
             </div>
         </div>
     </div>
@@ -93,7 +111,7 @@
                 const res = await fetch(`${API_BASE}/api/config`);
                 serverConfig = await res.json();
             } catch (err) {
-                console.error("Failed to fetch config", err);
+                console.error("Config alınamadı", err);
             }
         }
 
@@ -104,13 +122,22 @@
                 renderUsers(users);
                 updateStats(users);
             } catch (err) {
-                console.error("Failed to fetch users:", err);
+                console.error("Kullanıcılar alınamadı:", err);
+            }
+        }
+
+        async function fetchLiveTraffic() {
+            try {
+                const res = await fetch(`${API_BASE}/api/traffic/live`);
+                const data = await res.json();
+                updateLiveStats(data);
+            } catch (err) {
+                console.error("Canlı trafik alınamadı:", err);
             }
         }
 
         function formatBytes(bytes) {
             if (bytes === 0) return '0 B';
-            if (bytes < 0) return 'Unlimited';
             const k = 1024;
             const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -124,12 +151,19 @@
             document.getElementById('stat-traffic').innerText = formatBytes(totalBytes);
         }
 
+        function updateLiveStats(data) {
+            if (data.timestamp) {
+                const date = new Date(data.timestamp);
+                document.getElementById('stat-lastupdate').innerText = date.toLocaleTimeString('tr-TR');
+            }
+        }
+
         function renderUsers(users) {
             const tbody = document.getElementById('users-table-body');
             tbody.innerHTML = '';
             
             if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">No users found. Add one above!</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Henüz kullanıcı yok. Yukarıdan ekleyin!</td></tr>';
                 return;
             }
 
@@ -137,7 +171,7 @@
                 const tr = document.createElement('tr');
                 tr.className = 'table-row';
                 
-                const quotaText = user.quota_bytes === 0 ? 'Unlimited' : formatBytes(user.quota_bytes);
+                const quotaText = user.quota_bytes === 0 ? 'Sınırsız' : formatBytes(user.quota_bytes);
                 const usagePercent = user.quota_bytes > 0 ? Math.min((user.used_bytes / user.quota_bytes) * 100, 100) : 0;
                 
                 tr.innerHTML = `
@@ -149,17 +183,17 @@
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm text-white">${formatBytes(user.used_bytes)} <span class="text-slate-500">/ ${quotaText}</span></div>
                         <div class="w-full bg-slate-700 rounded-full h-1.5 mt-2">
-                            <div class="bg-blue-500 h-1.5 rounded-full" style="width: ${usagePercent}%"></div>
+                            <div class="bg-purple-500 h-1.5 rounded-full" style="width: ${usagePercent}%"></div>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.is_active ? 'bg-green-900 text-green-200' : 'bg-red-900 text-red-200'}">
-                            ${user.is_active ? 'Active' : 'Blocked'}
+                            ${user.is_active ? 'Aktif' : 'Engelli'}
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button onclick="showQR('${user.uuid}', '${user.username}')" class="text-blue-400 hover:text-blue-300">QR</button>
-                        <button onclick="deleteUser(${user.id})" class="text-red-400 hover:text-red-300">Delete</button>
+                        <button onclick="showQR('${user.uuid}', '${user.username}')" class="text-purple-400 hover:text-purple-300">QR</button>
+                        <button onclick="deleteUser(${user.id})" class="text-red-400 hover:text-red-300">Sil</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -179,7 +213,7 @@
                     document.getElementById('add-user-form').reset();
                     fetchUsers();
                 } else {
-                    alert("Failed to add user");
+                    alert("Kullanıcı eklenemedi");
                 }
             } catch (err) {
                 console.error(err);
@@ -187,7 +221,7 @@
         });
 
         async function deleteUser(id) {
-            if (!confirm("Are you sure you want to delete this user?")) return;
+            if (!confirm("Bu kullanıcıyı silmek istediğinize emin misiniz?")) return;
             try {
                 await fetch(`${API_BASE}/api/users/${id}`, { method: 'DELETE' });
                 fetchUsers();
@@ -201,10 +235,10 @@
             currentUsername = username;
             
             document.getElementById('qrcode').innerHTML = '';
-            const vlessLink = generateVLESSLink(uuid);
+            const subLink = generateSubscriptionLink();
             
             new QRCode(document.getElementById("qrcode"), {
-                text: vlessLink,
+                text: subLink,
                 width: 256,
                 height: 256,
                 colorDark: "#ffffff",
@@ -251,18 +285,32 @@
             return "vmess://" + btoa(JSON.stringify(config));
         }
 
+        function generateSubscriptionLink() {
+            return `${API_BASE}/sub/${currentUsername}`;
+        }
+
         function copyLink(type) {
             let link = "";
             if (type === 'vless') link = generateVLESSLink(currentUUID);
             if (type === 'vmess') link = generateVMessLink(currentUUID);
             
             navigator.clipboard.writeText(link).then(() => {
-                alert("Link copied to clipboard!");
+                alert("Link kopyalandı!");
             });
         }
 
-        // Sayfa yüklendiğinde konfigürasyonu ve kullanıcıları çek
+        function copySubscriptionLink() {
+            const link = generateSubscriptionLink();
+            navigator.clipboard.writeText(link).then(() => {
+                alert("Abonelik linki kopyalandı!\n\nBu linki v2rayNG, Streisand veya Hiddify'a ekleyin.");
+            });
+        }
+
+        // Sayfa yüklendiğinde
         fetchConfig().then(() => fetchUsers());
+        
+        // Her 10 saniyede bir canlı trafiği güncelle
+        setInterval(fetchLiveTraffic, 10000);
     </script>
 </body>
 </html>
