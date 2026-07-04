@@ -6,12 +6,15 @@ Modern, web tabanlı Xray-Core yönetim paneli. VLESS + Reality ve VMess protoko
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-green.svg)
 ![Xray-Core](https://img.shields.io/badge/Xray-Core-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-purple.svg)
+![Version](https://img.shields.io/badge/Version-1.1.0-purple.svg)
 
 ## 🎯 Özellikler
 
 - ✅ **VLESS + Reality** desteği (en güncel ve tespit edilmesi zor protokol)
 - ✅ **VMess + WebSocket** desteği
+- ✅ **Abonelik Sistemi** (v2rayNG, Streisand, Hiddify uyumlu)
+- ✅ **Telegram Bot Entegrasyonu** (mobilden yönetim)
+- ✅ **Canlı Trafik İzleme** (gerçek zamanlı kullanım takibi)
 - ✅ Web tabanlı kullanıcı yönetimi
 - ✅ Kota ve trafik takibi
 - ✅ Otomatik QR kod üretimi
@@ -44,80 +47,115 @@ chmod +x install.sh
 sudo ./install.sh
 ```
 
+Kurulum sırasında Telegram bot kurulumu isteyecektir. Eğer bot kullanmak istiyorsanız:
+1. [@BotFather](https://t.me/BotFather)'dan yeni bot oluşturun ve token'ı alın
+2. Kendi Telegram ID'nizi öğrenin ([@userinfobot](https://t.me/userinfobot) kullanabilirsiniz)
+3. Kurulum sırasında bu bilgileri girin
+
 Kurulum tamamlandığında:
 - Panel `http://SUNUCU_IP:8000` adresinde çalışır
 - Reality Public Key terminalde gösterilir (istemcilerle paylaşın)
-- Xray servisi otomatik başlar
-
-### Manuel Kurulum
-
-```bash
-# 1. Sistem güncelleme
-sudo apt-get update && sudo apt-get upgrade -y
-
-# 2. Python ve bağımlılıklar
-sudo apt-get install -y python3 python3-pip python3-venv curl jq git
-
-# 3. Xray-Core kurulumu
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-
-# 4. Proje dizini oluştur
-sudo mkdir -p /opt/pho3nix-panel
-cd /opt/pho3nix-panel
-
-# 5. Dosyaları kopyala (proje dizininden)
-sudo cp /path/to/pho3nix-panel/* .
-sudo cp -r /path/to/pho3nix-panel/templates .
-
-# 6. Python sanal ortam
-sudo python3 -m venv venv
-sudo source venv/bin/activate
-sudo pip install -r requirements.txt
-
-# 7. Reality anahtarları üret
-KEYS=$(xray x25519)
-PRIVATE_KEY=$(echo "$KEYS" | grep "Private" | awk '{print $3}')
-PUBLIC_KEY=$(echo "$KEYS" | grep "Public" | awk '{print $3}')
-
-echo "REALITY_PRIVATE=$PRIVATE_KEY" | sudo tee .env
-echo "REALITY_PUBLIC=$PUBLIC_KEY" | sudo tee -a .env
-
-# 8. Systemd servisi oluştur
-sudo cat <<EOF > /etc/systemd/system/pho3nix-panel.service
-[Unit]
-Description=Pho3nix VPN Management Panel
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/pho3nix-panel
-Environment="PATH=/opt/pho3nix-panel/venv/bin"
-ExecStart=/opt/pho3nix-panel/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# 9. Servisleri başlat
-sudo systemctl daemon-reload
-sudo systemctl enable xray
-sudo systemctl start xray
-sudo systemctl enable pho3nix-panel
-sudo systemctl start pho3nix-panel
-```
+- Xray servisi ve Telegram bot (isteğe bağlı) otomatik başlar
 
 ## 📖 Kullanım
 
 ### Web Arayüzü
 
 1. Tarayıcınızda `http://SUNUCU_IP:8000` adresine gidin
-2. "Add New User" bölümünden kullanıcı ekleyin
+2. "Yeni Kullanıcı Ekle" bölümünden kullanıcı ekleyin
 3. Kullanıcı listesinden "QR" butonuna tıklayarak bağlantı kodunu alın
-4. "Copy VLESS Link" veya "Copy VMess Link" ile bağlantıyı kopyalayın
+4. **Abonelik Linkini Kopyala** butonu ile tek linkle tüm protokolleri alın
 
-### İstemci Ayarları
+### 📱 Abonelik Sistemi (Subscription Link)
+
+**En kolay yöntem!** Kullanıcıya tek bir link verirsiniz, tüm uygulamalar otomatik olarak sunucuları çeker.
+
+**Abonelik Linki Formatı:**
+```
+http://SUNUCU_IP:8000/sub/KULLANICI_ADI
+```
+
+**Örnek:**
+```
+http://123.45.67.89:8000/sub/ahmet
+```
+
+#### Kullanıcı Uygulamalarına Ekleme:
+
+**v2rayNG (Android):**
+1. Uygulamayı açın
+2. Sağ üstteki **"+"** butonuna tıklayın
+3. **"İçe aktar"** veya **"Import from clipboard"** seçin
+4. Abonelik linkini yapıştırın
+5. **"Abonelik güncelle"** butonuna tıklayın
+
+**Streisand (iOS):**
+1. Uygulamayı açın
+2. **"+"** butonuna tıklayın
+3. **"Abonelik ekle"** seçin
+4. Link yapıştırın ve kaydedin
+5. Abonelik kartına tıklayarak güncelleyin
+
+**Hiddify (Android/iOS/Desktop):**
+1. Uygulamayı açın
+2. **"Profil ekle"** butonuna tıklayın
+3. **"Abonelik URL'sinden ekle"** seçin
+4. Linki yapıştırın
+5. Otomatik olarak tüm sunucular eklenecek
+
+**Avantajları:**
+- ✅ Tek linkle tüm protokoller (VLESS + VMess)
+- ✅ Kullanıcı silinince otomatik devre dışı
+- ✅ Kota bitince otomatik engelleme
+- ✅ Sunucu değişikliğinde yeniden kurulum gerekmez
+
+### 🤖 Telegram Bot Kullanımı
+
+BotFather'dan oluşturduğunuz bota mesaj atarak paneli yönetebilirsiniz.
+
+**Mevcut Komutlar:**
+
+```
+/start - Bot hakkında bilgi ve komut listesi
+/add <kullanıcı_adı> <kota_gb> - Yeni kullanıcı ekle
+/delete <kullanıcı_adı> - Kullanıcı sil
+/list - Tüm kullanıcıları listele
+/status - Sistem durumu (kullanıcı sayısı, trafik)
+/sub <kullanıcı_adı> - Abonelik linkini al
+```
+
+**Örnek Kullanım:**
+
+```
+/add ahmet 50
+→ 50 GB kotalı "ahmet" kullanıcısı oluşturur
+
+/list
+→ Tüm kullanıcıları ve kota durumlarını gösterir
+
+/sub ahmet
+→ Ahmet'in abonelik linkini gönderir
+
+/delete ahmet
+→ Ahmet kullanıcısını siler
+```
+
+**Güvenlik:** Bot sadece `.env` dosyasında tanımlı admin ID'lerine yanıt verir. Yetkisiz kullanıcılar botu kullanamaz.
+
+### 📊 Canlı Trafik İzleme
+
+Dashboard'da **her 10 saniyede bir** otomatik olarak güncellenen trafik verileri:
+
+- **Toplam Kullanıcı:** Sistemdeki tüm kullanıcı sayısı
+- **Aktif Bağlantı:** Kota aşmamış kullanıcılar
+- **Toplam Trafik:** Tüm kullanıcıların harcadığı veri
+- **Son Güncelleme:** Trafik verisinin en son ne zaman güncellendiği
+
+Xray access log dosyası (`/var/log/xray/access.log`) her 5 dakikada bir parse edilerek veritabanı güncellenir.
+
+### İstemci Ayarları (Manuel Kurulum)
+
+Abonelik linki kullanmıyorsanız, manuel olarak da bağlanabilirsiniz:
 
 #### VLESS + Reality (Önerilen)
 
@@ -167,6 +205,7 @@ sudo ufw enable
 - ✅ Temel kimlik doğrulama ekleyin (HTTP Basic Auth)
 - ✅ Fail2ban kurun
 - ✅ Düzenli yedekleme alın (`/opt/pho3nix-panel/pho3nix_panel.db`)
+- ✅ Telegram bot admin ID'lerini güvenli tutun
 
 ### Nginx Reverse Proxy Örneği
 
@@ -192,7 +231,9 @@ server {
 | POST | `/api/users?username=xxx&quota_gb=10` | Yeni kullanıcı ekle |
 | DELETE | `/api/users/{id}` | Kullanıcı sil |
 | POST | `/api/traffic/update?user_id=1&added_bytes=1000` | Trafik güncelle |
+| GET | `/api/traffic/live` | Canlı trafik verilerini al |
 | GET | `/api/config` | Sunucu konfigürasyonunu al |
+| GET | `/sub/{username}` | Abonelik linki (base64 encoded) |
 
 ### API Örnekleri
 
@@ -205,6 +246,12 @@ curl -X POST "http://localhost:8000/api/users?username=ahmet&quota_gb=50"
 
 # Kullanıcı sil
 curl -X DELETE http://localhost:8000/api/users/1
+
+# Canlı trafik verisi al
+curl http://localhost:8000/api/traffic/live
+
+# Abonelik linkini al (v2rayNG için)
+curl http://localhost:8000/sub/ahmet
 
 # Sunucu bilgilerini al
 curl http://localhost:8000/api/config
@@ -219,14 +266,19 @@ curl http://localhost:8000/api/config
 ├── database.py           # SQLAlchemy ORM
 ├── xray_manager.py       # Xray config yönetimi
 ├── main.py               # FastAPI uygulaması
+├── telegram_bot.py       # Telegram bot entegrasyonu
 ├── pho3nix_panel.db      # SQLite veritabanı
-├── .env                  # Reality anahtarları (GİZLİ)
+├── .env                  # Reality ve Telegram anahtarları (GİZLİ)
 ├── venv/                 # Python sanal ortamı
 └── templates/
     └── index.html        # Web arayüzü
 
 /etc/xray/
 └── config.json           # Xray-Core konfigürasyonu (otomatik üretilir)
+
+/var/log/xray/
+├── access.log            # Xray erişim logları (trafik izleme için)
+└── error.log             # Xray hata logları
 ```
 
 ## 🐛 Sorun Giderme
@@ -254,12 +306,31 @@ sudo xray run -test -config /etc/xray/config.json
 sudo journalctl -u xray -f
 ```
 
+### Telegram bot çalışmıyor
+
+```bash
+# Bot servis durumu
+sudo systemctl status pho3nix-bot
+
+# Bot logları
+sudo journalctl -u pho3nix-bot -f
+
+# .env dosyasını kontrol edin
+cat /opt/pho3nix-panel/.env | grep TELEGRAM
+```
+
+**Sık karşılaşılan bot sorunları:**
+- ❌ Bot token yanlış → BotFather'dan yeni token alın
+- ❌ Admin ID yanlış → [@userinfobot](https://t.me/userinfobot) ile ID'nizi öğrenin
+- ❌ Bot yanıt vermiyor → `/start` komutu ile başlayın
+
 ### Kullanıcılar bağlanamıyor
 
 1. Reality Public Key'in doğru olduğundan emin olun
 2. Firewall portlarının açık olduğunu kontrol edin
 3. SNI değerini kontrol edin (www.microsoft.com)
 4. UUID'nin doğru kopyalandığından emin olun
+5. Abonelik linkini tekrar güncelleyin
 
 ### Kota aşıldı ama kullanıcı hala bağlı
 
@@ -268,6 +339,16 @@ sudo journalctl -u xray -f
 cd /opt/pho3nix-panel
 sudo source venv/bin/activate
 python -c "import database, xray_manager; db = next(database.get_db()); xray_manager.apply_config(db)"
+```
+
+### Trafik verisi güncellenmiyor
+
+```bash
+# Access log dosyasını kontrol edin
+sudo tail -f /var/log/xray/access.log
+
+# Manuel trafik güncelleme tetikle
+curl http://localhost:8000/api/traffic/live
 ```
 
 ## 📊 Veritabanı Yedekleme
@@ -284,6 +365,13 @@ crontab -e
 
 ## 📝 Değişiklik Günlüğü
 
+### v1.1.0 (2026-07-04)
+- ✨ **Abonelik Sistemi** - Tek linkle tüm protokoller
+- 🤖 **Telegram Bot** - Mobilden tam yönetim
+- 📊 **Canlı Trafik İzleme** - Gerçek zamanlı kullanım takibi
+- 🎨 Dashboard'a "Son Güncelleme" kartı eklendi
+- 📝 TrafficLog tablosu eklendi (detaylı trafik kayıtları)
+
 ### v1.0.0 (2026-07-04)
 - ✨ İlk sürüm
 - 🎉 VLESS + Reality desteği
@@ -291,6 +379,8 @@ crontab -e
 - 🎉 Web arayüzü
 - 🎉 Kullanıcı ve kota yönetimi
 - 🎉 QR kod ve bağlantı linki üretimi
+
+Detaylı değişiklik günlüğü için [CHANGELOG.md](CHANGELOG.md) dosyasına bakın.
 
 ## 🤝 Katkıda Bulunma
 
@@ -319,6 +409,7 @@ Bu yazılım yalnızca eğitim ve araştırma amaçlıdır. Kullanıcılar yerel
 
 - [Xray-Core](https://github.com/XTLS/Xray-core) - Güçlü proxy çekirdeği
 - [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework
+- [python-telegram-bot](https://github.com/python-telegram-bot/python-telegram-bot) - Telegram bot framework
 - [Tailwind CSS](https://tailwindcss.com/) - CSS framework
 - [SQLAlchemy](https://www.sqlalchemy.org/) - Python ORM
 - [QRCode.js](https://github.com/davidshimjs/qrcodejs) - QR kod üretimi
