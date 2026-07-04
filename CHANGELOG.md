@@ -4,6 +4,80 @@ Bu projenin tüm önemli değişiklikleri bu dosyada belgelenmiştir.
 
 Format [Keep a Changelog](https://keepachangelog.com/) standardına dayanmaktadır.
 
+## [1.1.0] - 2026-07-04
+
+### Eklenenler
+- ✨ **Abonelik Sistemi** (`/sub/{username}` endpoint'i)
+  - Base64 encoded çoklu protokol desteği (VLESS + VMess)
+  - v2rayNG, Streisand, Hiddify uygulamalarıyla tam uyumlu
+  - Kullanıcı silinince otomatik devre dışı
+  - Kota bitince otomatik engelleme
+  - Custom HTTP header'lar (X-Sub-User, X-Sub-Quota, X-Sub-Used)
+
+- 🤖 **Telegram Bot Entegrasyonu**
+  - `/start` - Bot hakkında bilgi
+  - `/add <isim> <kota>` - Kullanıcı ekleme
+  - `/delete <isim>` - Kullanıcı silme
+  - `/list` - Tüm kullanıcıları listeleme
+  - `/status` - Sistem durumu görüntüleme
+  - `/sub <isim>` - Abonelik linki alma
+  - Admin ID tabanlı yetkilendirme
+  - Systemd servisi olarak otomatik başlatma
+
+- 📊 **Canlı Trafik İzleme**
+  - Xray access log parsing (`/var/log/xray/access.log`)
+  - `/api/traffic/live` endpoint'i
+  - Her 5 dakikada otomatik trafik güncelleme (APScheduler)
+  - Dashboard'da 10 saniyede bir canlı yenileme
+  - TrafficLog tablosu (detaylı trafik kayıtları)
+  - Son güncelleme zamanı gösterimi
+
+- 🎨 **Dashboard İyileştirmeleri**
+  - "Son Güncelleme" istatistik kartı
+  - Canlı izleme göstergesi (yeşil nokta animasyonu)
+  - Mor tema vurguları
+  - Türkçe arayüz
+
+### Değişenler
+- `requirements.txt` güncellendi:
+  - `python-telegram-bot==20.7` eklendi
+  - `httpx==0.27.0` eklendi
+  - `apscheduler==3.10.4` eklendi
+  - `python-multipart==0.0.9` eklendi
+  - `base58==2.1.1` eklendi
+
+- `database.py` güncellendi:
+  - `TrafficLog` tablosu eklendi
+  - `User.last_traffic_update` alanı eklendi
+
+- `xray_manager.py` güncellendi:
+  - `parse_traffic_from_logs()` fonksiyonu eklendi
+  - Xray config'e `stats` ve `log` bölümleri eklendi
+  - Access log parsing ve kota kontrolü
+
+- `main.py` güncellendi:
+  - `/api/traffic/live` endpoint eklendi
+  - `/sub/{username}` endpoint eklendi
+  - APScheduler ile periyodik trafik güncelleme
+  - Background task yönetimi
+
+- `install.sh` güncellendi:
+  - Telegram bot kurulum seçeneği eklendi
+  - `/var/log/xray/` dizini oluşturma
+  - `pho3nix-bot.service` systemd servisi
+
+### Teknik Detaylar
+- FastAPI lifespan event'leri ile scheduler yönetimi
+- SQLAlchemy session yönetimi iyileştirildi
+- Telegram bot async/await pattern'leri
+- Base64 encoding/decoding for subscription links
+- Regex-based log parsing
+
+### Güvenlik
+- Telegram bot admin ID doğrulaması
+- Access log dosyası otomatik temizleme
+- Kota aşımında otomatik kullanıcı engelleme
+
 ## [1.0.0] - 2026-07-04
 
 ### Eklenenler
@@ -73,5 +147,6 @@ Bu proje [Semantic Versioning](https://semver.org/) kullanmaktadır.
 - **MINOR** (0.X.0): Geriye uyumlu yeni özellikler
 - **PATCH** (0.0.X): Geriye uyumlu hata düzeltmeleri
 
-[1.0.0]: https://github.com/username/xray-panel/releases/tag/v1.0.0
-[0.1.0]: https://github.com/username/xray-panel/releases/tag/v0.1.0
+[1.1.0]: https://github.com/memobeys3/pho3nix-panel/releases/tag/v1.1.0
+[1.0.0]: https://github.com/memobeys3/pho3nix-panel/releases/tag/v1.0.0
+[0.1.0]: https://github.com/memobeys3/pho3nix-panel/releases/tag/v0.1.0
