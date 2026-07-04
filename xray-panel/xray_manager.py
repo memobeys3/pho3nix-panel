@@ -1,11 +1,14 @@
 import json
 import os
 import subprocess
+import re
+from datetime import datetime
 from sqlalchemy.orm import Session
 import database
 
 CONFIG_PATH = "/etc/xray/config.json"
-ENV_PATH = "/opt/xray-panel/.env"
+ENV_PATH = "/opt/pho3nix-panel/.env"
+ACCESS_LOG_PATH = "/var/log/xray/access.log"
 
 def load_env():
     env_vars = {}
@@ -74,7 +77,6 @@ def generate_xray_config(db: Session):
             "tag": "vmess_ws_in"
         })
 
-    # Eğer hiç kullanıcı yoksa Xray servisinin çökmemesi için dummy inbound
     if not inbounds:
         inbounds.append({
             "listen": "127.0.0.1",
@@ -85,16 +87,23 @@ def generate_xray_config(db: Session):
         })
 
     config = {
-        "log": {"loglevel": "warning"},
+        "log": {
+            "loglevel": "info",
+            "access": ACCESS_LOG_PATH,
+            "error": "/var/log/xray/error.log"
+        },
         "inbounds": inbounds,
         "outbounds": [{"protocol": "freedom", "tag": "direct"}],
         "routing": {
             "domainStrategy": "IPIfNonMatch",
             "rules": []
-        }
+        },
+        "stats": {}
     }
     
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+    os.makedirs(os.path.dirname(ACCESS_LOG_PATH), exist_ok=True)
+    
     with open(CONFIG_PATH, "w") as f:
         json.dump(config, f, indent=4)
 
@@ -108,3 +117,52 @@ def restart_xray_service():
 def apply_config(db: Session):
     generate_xray_config(db)
     return restart_xray_service()
+
+def parse_traffic_from_logs(db: Session):
+    """Xray access log'dan trafik bilgilerini parse eder"""
+    if not os.path.exists(ACCESS_LOG_PATH):
+        return
+    
+    traffic_data = {}
+    
+    try:
+        with open(ACCESS_LOG_PATH, "r") as f:
+            for line in f:
+                # Log format: 2024/01/01 12:00:00 1.2.3.4:12345 accepted tcp:443 [vless_reality_in] email: username
+                match = re.search(r'email:\s*(\S+)', line)
+                if match:
+                    username = match.group(1)
+                    if username not in traffic_data:
+                        traffic_data[username] = 0
+                    
+                    # Her log satırı yaklaşık 1KB veri transferini temsil eder (basit tahmin)
+                    traffic_data[username] += 1024
+        
+        # Veritabanını güncelle
+        for username, bytes_used in traffic_data.items():
+            user = db.query(database.User).filter(database.User.username == username).first()
+            if user:
+                user.used_bytes += bytes_used
+                user.last_traffic_update = datetime.utcnow()
+                
+                # Kota kontrolü
+                if user.quota_bytes > 0 and user.used_bytes >= user.quota_bytes:
+                    user.is_active = False
+                    
+                # Traffic log kaydet
+                traffic_log = database.TrafficLog(
+                    user_id=user.id,
+                    bytes_up=0,
+                    bytes_down=bytes_used,
+                    timestamp=datetime.utcnow()
+                )
+                db.add(traffic_log)
+        
+        db.commit()
+        
+        # Log dosyasını temizle (okunan satırları sil)
+        if traffic_data:
+            open(ACCESS_LOG_PATH, 'w').close()
+            
+    except Exception as e:
+        print(f"Log parse hatası: {e}")
