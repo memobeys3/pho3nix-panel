@@ -1,5 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks
+from fastapi.responses import HTMLResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 import database
@@ -8,9 +8,28 @@ import uuid
 import random
 import os
 import urllib.request
+import base64
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime
 
-app = FastAPI(title="Xray VPN Management Panel")
+app = FastAPI(title="Pho3nix Panel")
 templates = Jinja2Templates(directory="templates")
+
+# Scheduler - Periyodik trafik güncelleme
+scheduler = AsyncIOScheduler()
+
+def update_traffic_periodically():
+    """Her 5 dakikada bir trafiği güncelle"""
+    db = next(database.get_db())
+    try:
+        xray_manager.parse_traffic_from_logs(db)
+    finally:
+        db.close()
+
+@app.on_event("startup")
+async def startup_event():
+    scheduler.add_job(update_traffic_periodically, 'interval', minutes=5)
+    scheduler.start()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -18,8 +37,7 @@ async def read_root(request: Request):
 
 @app.get("/api/config")
 def get_config():
-    # Dinamik olarak sunucu IP'sini ve Reality Public Key'ini döndürür
-    env_path = "/opt/xray-panel/.env"
+    env_path = "/opt/pho3nix-panel/.env"
     public_key = ""
     if os.path.exists(env_path):
         with open(env_path, "r") as f:
@@ -50,7 +68,8 @@ def get_users(db: Session = Depends(database.get_db)):
             "port": u.port,
             "quota_bytes": u.quota_bytes,
             "used_bytes": u.used_bytes,
-            "is_active": u.is_active
+            "is_active": u.is_active,
+            "last_update": u.last_traffic_update.isoformat() if u.last_traffic_update else None
         }
         for u in users
     ]
@@ -61,7 +80,6 @@ def add_user(username: str, quota_gb: float = 0, db: Session = Depends(database.
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
 
-    # Basit port tahsisi
     port = random.randint(10000, 60000)
     
     new_user = database.User(
@@ -95,7 +113,6 @@ def delete_user(user_id: int, db: Session = Depends(database.get_db)):
 
 @app.post("/api/traffic/update")
 def update_traffic(user_id: int, added_bytes: int, db: Session = Depends(database.get_db)):
-    # Xray loglarından veya API'sinden trafik güncellemesi için mock endpoint
     user = db.query(database.User).filter(database.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -107,6 +124,92 @@ def update_traffic(user_id: int, added_bytes: int, db: Session = Depends(databas
     db.commit()
     
     if not user.is_active:
-        xray_manager.apply_config(db) # Kotayı aşan kullanıcıyı konfigürasyondan düş
+        xray_manager.apply_config(db)
         
     return {"message": "Traffic updated"}
+
+@app.get("/api/traffic/live")
+def get_live_traffic(db: Session = Depends(database.get_db)):
+    """Canlı trafik verilerini döndür"""
+    users = db.query(database.User).all()
+    return {
+        "users": [
+            {
+                "username": u.username,
+                "used_bytes": u.used_bytes,
+                "quota_bytes": u.quota_bytes,
+                "is_active": u.is_active,
+                "last_update": u.last_traffic_update.isoformat() if u.last_traffic_update else None
+            }
+            for u in users
+        ],
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@app.get("/sub/{username}")
+def get_subscription(username: str, request: Request, db: Session = Depends(database.get_db)):
+    """Abonelik linki - Tüm protokolleri base64 encoded döndürür"""
+    user = db.query(database.User).filter(database.User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if not user.is_active:
+        return PlainTextResponse("Hesabınızın süresi dolmuş veya engellenmiş.", status_code=403)
+    
+    # Sunucu bilgilerini al
+    env_path = "/opt/pho3nix-panel/.env"
+    public_key = ""
+    if os.path.exists(env_path):
+        with open(env_path, "r") as f:
+            for line in f:
+                if line.startswith("REALITY_PUBLIC="):
+                    public_key = line.strip().split("=", 1)[1]
+    
+    try:
+        server_ip = urllib.request.urlopen('https://ifconfig.me', timeout=3).read().decode('utf8')
+    except:
+        server_ip = request.client.host if request.client else "localhost"
+    
+    # VLESS link oluştur
+    vless_params = {
+        "type": "tcp",
+        "security": "reality",
+        "pbk": public_key,
+        "sni": "www.microsoft.com",
+        "fp": "chrome",
+        "sid": "0123456789abcdef",
+        "flow": "xtls-rprx-vision"
+    }
+    vless_link = f"vless://{user.uuid}@{server_ip}:443?{'&'.join([f'{k}={v}' for k,v in vless_params.items()])}#{username}-VLESS"
+    
+    # VMess link oluştur
+    vmess_config = {
+        "v": "2",
+        "ps": f"{username}-VMess",
+        "add": server_ip,
+        "port": "8080",
+        "id": user.uuid,
+        "aid": "0",
+        "net": "ws",
+        "type": "none",
+        "host": "",
+        "path": "/vmess",
+        "tls": ""
+    }
+    import json
+    vmess_link = "vmess://" + base64.b64encode(json.dumps(vmess_config).encode()).decode()
+    
+    # Tüm linkleri birleştir ve base64 encode et
+    all_links = f"{vless_link}\n{vmess_link}"
+    encoded = base64.b64encode(all_links.encode()).decode()
+    
+    return PlainTextResponse(
+        content=encoded,
+        headers={
+            "Content-Type": "text/plain",
+            "Content-Disposition": "inline",
+            "X-Sub-User": username,
+            "X-Sub-Quota": str(user.quota_bytes),
+            "X-Sub-Used": str(user.used_bytes)
+        }
+    )
