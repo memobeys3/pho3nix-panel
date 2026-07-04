@@ -4,8 +4,7 @@ from sqlalchemy.orm import sessionmaker
 import datetime
 import os
 
-# Veritabanı dosyasının panel dizininde kalması için path ayarı
-DB_PATH = os.path.join(os.path.dirname(__file__), "xray_panel.db")
+DB_PATH = os.path.join(os.path.dirname(__file__), "pho3nix_panel.db")
 SQLALCHEMY_DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -19,10 +18,20 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     uuid = Column(String, unique=True, index=True, nullable=False)
     port = Column(Integer, nullable=False)
-    quota_bytes = Column(BigInteger, default=0) # 0 sınırsız anlamına gelir
+    quota_bytes = Column(BigInteger, default=0)
     used_bytes = Column(BigInteger, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    last_traffic_update = Column(DateTime, default=datetime.datetime.utcnow)
+
+class TrafficLog(Base):
+    __tablename__ = "traffic_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=False)
+    bytes_up = Column(BigInteger, default=0)
+    bytes_down = Column(BigInteger, default=0)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
 
